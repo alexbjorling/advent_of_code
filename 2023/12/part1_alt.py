@@ -4,8 +4,7 @@ def find_solutions(row, *blocks, start=0, blockind=0):
     solutions = []
 
     if blockind == len(blocks):
-        # Done! Stop recursion. Unless we skipped a # somewhere,
-        if [len(s) for s in re.findall('(#+)', row)] == list(blocks):
+        if not '#' in row[start:]:
             return [row.replace('?', '.')]
         return []
 
@@ -14,6 +13,9 @@ def find_solutions(row, *blocks, start=0, blockind=0):
     if match is None:
         return []
     pos = start + match.span()[0] + 1
+    if '#' in row[start:pos]:
+        return []
+
 
     # evaluate what happens if we do or don't put the block here
     s = row[:pos].replace('?', '.') + '#' * blocks[blockind] + row[pos + blocks[blockind]:]
@@ -32,4 +34,5 @@ with open('input.txt', 'r') as fp:
         solns = find_solutions(row, *numbers)
         total += len(solns)
 
-assert total == 8419
+#assert total == 8419
+print(total)
