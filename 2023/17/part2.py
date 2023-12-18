@@ -1,7 +1,7 @@
 import numpy as np
 import queue
 
-ESTIMATED_COST_PER_STEP = 1
+ESTIMATED_COST_PER_STEP = 2
 
 class Path:
     """
@@ -15,7 +15,6 @@ class Path:
         self.pos = pos
         self.vel = vel
         self.n_consecutive = 0
-        self.parent = None
 
     def step(self):
         """
@@ -26,9 +25,12 @@ class Path:
         turn_right = [[0, 1],[-1, 0]]
         turn_left = [[0, -1],[1, 0]]
         straight = [[1, 0], [0, 1]]
-        turns = [turn_left, turn_right]
-        if self.n_consecutive < 3:
-            turns.append(straight)
+        if self.n_consecutive < 4:
+            turns = [straight]
+        elif self.n_consecutive < 10:
+            turns = [turn_left, turn_right, straight]
+        else:
+            turns = [turn_right, turn_left]
 
         # make branches for each allowed turn
         copies = []
@@ -59,7 +61,6 @@ class Path:
         p.pos = self.pos
         p.vel = self.vel
         p.n_consecutive = self.n_consecutive
-        p.parent = self
         return p
 
     def f(self):
@@ -67,26 +68,10 @@ class Path:
         return self.cost + ESTIMATED_COST_PER_STEP * dist
 
     def done(self):
-        return self.pos == self.goal
+        return (self.pos == self.goal) and (self.n_consecutive >= 4)
 
     def hash(self):
         return (self.pos, self.vel, self.n_consecutive)
-
-    def reconstruct(self):
-        if self.parent is None:
-            return [self]
-        else:
-            history = [self]
-            history += self.parent.reconstruct()
-        return history
-
-    def render_history(self):
-        board = np.ones((self.board.shape[0], self.board.shape[1]+1), dtype=np.uint8) * ord('.')
-        board[:, -1] = ord('\n')
-        history = [p.pos for p in self.reconstruct()][::-1]
-        for p in history:
-            board[p] = ord('#')
-        return board.tobytes().decode()
 
     def __gt__(self, other):
         return self.f() > other.f()
@@ -114,4 +99,4 @@ while True:
             q.put(new)
             cost_map[new.hash()] = new.cost
 
-assert node.cost == 886
+assert node.cost == 1055
