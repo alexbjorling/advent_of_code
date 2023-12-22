@@ -1,4 +1,5 @@
 import numpy as np
+import scipy
 
 # read the data and construct a map of obstacles and the current
 # state, zero-padded for easier boundaries
@@ -16,14 +17,16 @@ board[np.where(board == ord('.'))] = 1
 board[np.where(board == ord('#'))] = 0
 board[start] = 1
 
-# update the current state 64 times
-deltas = np.array([(1, 0), (-1, 0), (0, 1), (0, -1)])
+# kernel for propagation
+kernel = np.array([
+    [0, 1, 0],
+    [1, 0, 1],
+    [0, 1, 0]])
+
+# main loop
 for i in range(64):
-    starting_points = np.array(np.where(current)).T
-    current[:] = 0
-    for start in starting_points:
-        for delta in deltas:
-            new = tuple(start + delta)
-            current[new] = board[new]
+    current[:] = scipy.signal.convolve2d(current, kernel, mode='same')
+    current[:] = np.where(current > 0, 1, 0)
+    current[:] = current * board
 
 assert current.sum() == 3740
