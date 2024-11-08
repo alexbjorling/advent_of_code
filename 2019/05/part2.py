@@ -1,15 +1,15 @@
+INPUT = 5
+
 def get_operand(data, pos, mode):
     if mode == 0:
         return data[data[pos]]
     else:
         return data[pos]
 
-def compute(data, max_iter=None):
+def compute(data):
     position = 0
-    iter = 0
     last_output = None
     while True:
-        iter += 1
         # first parse the instruction command and its parameter modes
         val = "00000" + str(data[position])
         cmd = int(val[-2:])
@@ -31,22 +31,46 @@ def compute(data, max_iter=None):
             data[data[position + 3]] = operand1 * operand2
             position += 4
         elif cmd == 3:
-            print("****** input 1")
-            data[data[position + 1]] = 1  # only input right now
+            print("****** input", INPUT)
+            data[data[position + 1]] = INPUT  # only input right now
             position += 2
         elif cmd == 4:
             val = get_operand(data, position+1, pmodes[0])
             print(f"****** output:", val)
             last_output = val
             position += 2
+        elif cmd == 5:  # jump-if-true
+            cond = get_operand(data, position+1, pmodes[0])
+            dest = get_operand(data, position+2, pmodes[1])
+            if cond != 0:
+                position = dest
+            else:
+                position += 3
+        elif cmd == 6:  # jump-if-false
+            cond = get_operand(data, position+1, pmodes[0])
+            dest = get_operand(data, position+2, pmodes[1])
+            if cond == 0:
+                position = dest
+            else:
+                position += 3
+        elif cmd == 7:  # less-than
+            operand1 = get_operand(data, position+1, pmodes[0])
+            operand2 = get_operand(data, position+2, pmodes[1])
+            result = int(operand1 < operand2)
+            data[data[position + 3]] = result
+            position += 4
+        elif cmd == 8:  # equals
+            operand1 = get_operand(data, position+1, pmodes[0])
+            operand2 = get_operand(data, position+2, pmodes[1])
+            result = int(operand1 == operand2)
+            data[data[position + 3]] = result
+            position += 4
         else:
             raise ValueError(f"Unknown command at index {position}: {cmd}")
 
-        if iter == max_iter:
-            break
     return last_output
 
 with open("input.txt", "r") as fp:
     data = list(map(int, fp.readline().split(",")))
 
-assert compute(data) == 13933662
+assert compute(data) == 2369720
