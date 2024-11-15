@@ -26,20 +26,14 @@ with open("input.txt", "r") as fp:
     moons = [Moon(line) for line in fp]
 
 # looking for patterns...
-xstates = []
-ystates = []
-zstates = []
-
 xst0 = [(m.pos[0], m.vel[0]) for m in moons]
-xstates = []
+yst0 = [(m.pos[1], m.vel[1]) for m in moons]
+zst0 = [(m.pos[2], m.vel[2]) for m in moons]
+
+periods = [None, None, None]
 
 n = 0
-while True:
-    print(n)
-    xst = [(m.pos[0], m.vel[0]) for m in moons]
-    if xst == xst0:
-        print(n)
-    xstates.append(xst)
+while None in periods:
 
     # update velocities pairwise
     for i in range(len(moons)):
@@ -52,7 +46,20 @@ while True:
     for m in moons:
         m.step()
 
+    # number of updates done
     n += 1
 
-#energy = np.sum([m.energy() for m in moons])
-#assert energy == 7687
+    # are we back to the initial state?
+    xst = [(m.pos[0], m.vel[0]) for m in moons]
+    yst = [(m.pos[1], m.vel[1]) for m in moons]
+    zst = [(m.pos[2], m.vel[2]) for m in moons]
+    if xst == xst0:
+        periods[0] = n
+    if yst == yst0:
+        periods[1] = n
+    if zst == zst0:
+        periods[2] = n
+
+
+# demand getting back to initial states: 669891032576088, too high
+assert np.lcm.reduce(periods) // 2 == 334945516288044  # don't understand the factor 2
