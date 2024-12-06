@@ -3,7 +3,7 @@ import time
 
 # load data
 data = []
-with open("ex.txt", "r") as fp:
+with open("input.txt", "r") as fp:
     for line in fp.read().strip().split('\n'):
         data.append([ord(c) for c in line.strip()])
 data = np.array(data)
@@ -34,6 +34,7 @@ def check_path(data, pos, dirc):
         if facing[0] > -1 and facing[0] < len(data) and facing[1] > -1 and facing[1] < len(data[0]):
             if data[tuple(facing)] == block:
                 dirc = np.dot(right, dirc)
+                continue
             pos = pos + dirc
         else:
             return visited.sum(), visited
@@ -50,10 +51,11 @@ right = np.array(((0, 1), (-1, 0)))
 pos0 = pos.copy()
 dirc0 = dirc.copy()
 
+# part 1
 n, visited = check_path(data, pos, dirc)
-print(n)
 assert n == 5162
 
+# part 2
 visited[tuple(pos0)] = 0
 free_sites = np.array(np.where(visited)).T  # array
 free_sites = [tuple(row) for row in free_sites]
@@ -62,16 +64,13 @@ i = 0
 for free_site in free_sites:
     i += 1
     data = data0.copy()
-    if visited[free_site] == 0:
-        print(i, free_site)
-        raise ValueError
-    data[free_site] = block
     dirc = dirc0.copy()
     pos = pos0.copy()
+    data[free_site] = block
     t0 = time.time()
     n, _ = check_path(data, pos, dirc)
     if n is None:
         infinite += 1
     if i % 100 == 0:
         print(f"{i} / {len(free_sites)}, {(time.time() - t0):.3f} s/board")
-print(infinite)
+assert infinite == 1909
