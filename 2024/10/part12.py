@@ -21,7 +21,8 @@ def find9(pos):
     M, N = data.shape
     for way in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
         new_pos = (pos[0] + way[0], pos[1] + way[1])
-        if new_pos[0] < 0 or new_pos[0] >= M or new_pos[1] < 0 or new_pos[1] >= N:
+        in_bounds = min(new_pos) >= 0 and new_pos[0] < M and new_pos[1] < N
+        if not in_bounds:
             continue
         if data[new_pos] == n + 1:
             nines += find9(new_pos)
