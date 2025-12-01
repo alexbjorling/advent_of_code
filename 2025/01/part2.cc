@@ -8,13 +8,14 @@ public:
     Dial() : pos(50) {};
 
     int move(int mv) {
-        int sign = mv / std::abs(mv);
-        int crossings = 0;
-        for (size_t i = 0; i < std::abs(mv); i++) {
+        // start with the whole cycles of 100
+        int crossings = std::abs(mv / 100);
+        pos = (pos + (mv / 100) * 100) % 100;
+        // then loop for the rest, mv % 100 left to go
+        int sign = (mv % 100) / std::abs(mv % 100);
+        for (size_t i = 0; i < std::abs(mv % 100); i++) {
             pos += sign;
-            if (pos % 100 == 0) {
-                crossings++;
-            }
+            crossings += (pos % 100 == 0);
         }
         return crossings;
     }
