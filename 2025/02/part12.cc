@@ -1,33 +1,21 @@
-#include <algorithm> // find
 #include <cassert>
 #include <fstream>
+#include <regex>
 #include <stdexcept>
 #include <string>
-#include <string_view>
 #include <vector>
 
-// helper to split a string on a char
-std::vector<std::string> split(const std::string& str, const char delimiter) {
-    std::vector<std::string> res;
-    auto p2 = str.begin();
-    while (p2 != str.end()) {
-        auto p1 = p2;
-        p2 = std::find(p1, str.end(), delimiter);
-        auto sv = std::string(p1, p2);
-        res.push_back(sv);
-        if (p2 != str.end()) {
-            p2++;
-        }
-    }
-    return res;
-}
-
-// parse data using split
+// parse data using regex
 std::vector<std::pair<long, long>> parse(const std::string& strdata) {
     std::vector<std::pair<long, long>> res;
-    for (auto& substr : split(strdata, ',')) {
-        auto pair = split(substr, '-');
-        res.push_back({std::stol(pair[0]), std::stol(pair[1])});
+    std::regex pattern("([0-9]+)-([0-9]+)");
+    auto begin = std::sregex_iterator(strdata.begin(), strdata.end(), pattern);
+    auto end = std::sregex_iterator();
+    for (auto it = begin; it != end; it++) {
+        auto match = *it;
+        if (match.size() >= 2) {
+            res.push_back({std::stol(match[1].str()), std::stol(match[2].str())}); // index 0 is the whole match
+        }
     }
     return res;
 }
@@ -93,8 +81,7 @@ int main() {
     for (auto& rng : ranges) {
         int x = 0;
         for (long i = rng.first; i <= rng.second; i++) {
-            //if (is_pair(i)) { // part 1
-            if (is_repeat(i)) { // part 2
+            if (is_repeat(i)) {
                 total += i;
             }
         }
