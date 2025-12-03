@@ -1,13 +1,16 @@
 #include <cassert>
 #include <fstream>
+#include <cmath>
 #include <regex>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
+#define int_t uint64_t
+
 // parse data using regex
-std::vector<std::pair<long, long>> parse(const std::string& strdata) {
-    std::vector<std::pair<long, long>> res;
+std::vector<std::pair<int_t, int_t>> parse(const std::string& strdata) {
+    std::vector<std::pair<int_t, int_t>> res;
     std::regex pattern("([0-9]+)-([0-9]+)");
     auto begin = std::sregex_iterator(strdata.begin(), strdata.end(), pattern);
     auto end = std::sregex_iterator();
@@ -20,19 +23,17 @@ std::vector<std::pair<long, long>> parse(const std::string& strdata) {
     return res;
 }
 
-// check if a number is made up of n identical sub-numbers
-bool is_repeat(long num, int n) {
-    // make a string and check that it can be split into n_repeat parts
-    std::string s = std::to_string(num);
-    if (s.size() % n != 0) {
+// numerically check if a number is made up of n identical sub-numbers
+bool is_repeat(int_t num, int n) {
+    int digits = std::ceil(std::log10(num + 1));
+    if (digits % n != 0) {
         return false;
     }
-
-    // loop through all the n_repeat parts, checking for identity
-    int len = s.size() / n;
-    std::string last(s.begin(), s.begin() + len);
+    int_t base = std::pow(10, digits / n);
+    int_t last = num % base;
     for (size_t i = 1; i < n; i++) {
-        std::string current(s.begin() + i * len, s.begin() + (i + 1) * len);
+        num /= base;
+        int_t current = num % base;
         if (current != last) {
             return false;
         }
@@ -41,11 +42,11 @@ bool is_repeat(long num, int n) {
     return true;
 }
 
-// check if a number is the repetition of a sub-number, at least twice
-bool is_repeat(long num) {
-    std::string s = std::to_string(num);
-    for (int splits = 2; splits <= s.size(); splits++) {
-        if (is_repeat(num, splits)) {
+// check if a number is the repetition of a smaller group
+bool is_repeat(int_t num) {
+    int digits = std::ceil(std::log10(num + 1));
+    for (int groups = 2; groups <= digits; groups++) {
+        if (is_repeat(num, groups)) {
             return true;
         }
     }
@@ -61,14 +62,13 @@ int main() {
     std::string strdata;
     std::getline(ifs, strdata);
 
-    // split the string into <long, long> pairs
+    // split the string into <int_t, int_t> pairs
     auto ranges = parse(strdata);
 
     // loop over the ranges, checking through each one, part 1
-    long total = 0;
+    int_t total = 0;
     for (auto& rng : ranges) {
-        int x = 0;
-        for (long i = rng.first; i <= rng.second; i++) {
+        for (int_t i = rng.first; i <= rng.second; i++) {
             if (is_repeat(i, 2)) {
                 total += i;
             }
@@ -79,8 +79,7 @@ int main() {
     // loop over the ranges, checking through each one, part 2
     total = 0;
     for (auto& rng : ranges) {
-        int x = 0;
-        for (long i = rng.first; i <= rng.second; i++) {
+        for (int_t i = rng.first; i <= rng.second; i++) {
             if (is_repeat(i)) {
                 total += i;
             }
