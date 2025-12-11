@@ -1,28 +1,21 @@
 #include "parse.hh"
 
 #include <cassert>
-#include <iostream>
+#include <deque>
 
-std::vector<int> mul(int c, std::vector<int> v) {
-    std::vector<int> ret(v.cbegin(), v.cend());
-    for (auto it = ret.begin(); it != ret.end(); it++) {
-        *it *= c;
-    }
-    return ret;
-}
-
-std::vector<int> linear_combination(const std::vector<std::vector<int>>& bases, const std::vector<int>& coeffs) {
-    assert(coeffs.size() == bases.size());
-    std::vector<int> sum(bases[0].size());
-    for (size_t i = 0; i < bases.size(); i++) {
+// press the buttons corresponding to the basis vectors according to presses
+std::vector<int> combine(const std::vector<std::vector<int>>& bases, const std::vector<int>& presses) {
+    std::vector<int> sum(bases[0].size(), 0);
+    for (auto button : presses) {
         for (size_t j = 0; j < bases[0].size(); j++) {
-            sum[i] += coeffs[i] * bases[i][j];
+            sum[j] += bases[button][j];
+            sum[j] %= 2;
         }
-        sum[i] = sum[i] % 2;
     }
     return sum;
 }
 
+// element wise vector comparison
 bool vectors_equal(std::vector<int> a, std::vector<int> b) {
     assert(a.size() == b.size());
     for (size_t i = 0; i < a.size(); i++) {
@@ -33,48 +26,32 @@ bool vectors_equal(std::vector<int> a, std::vector<int> b) {
     return true;
 }
 
-// give all combinations of n choices of the numbers min-max
-std::vector<std::vector<int>> combinations(int n, int max) {
-    // each initial choice in a vector of vectors
-    std::vector<std::vector<int>> old_res;
-    for (int j = 0; j <= max; j++) {
-        old_res.push_back({j});
-    }
-    // now add choices
-    for (int i = 1; i < n; i++) {
-        std::vector<std::vector<int>> new_res {};
-        for (auto& old : old_res) {
-            for (int j = 0; j <= max; j++) {
-                new_res.push_back(old);
-                new_res.back().push_back(j);
-            }
-        }
-        old_res = new_res;
-    }
-    return old_res;
-}
-
+// breadth first search, keeping the options in a std::deque container
 int main() {
-    auto data = load_data("ex.txt");
-    for (auto& d : data) {
-        auto target = std::get<0>(d);
-        auto buttons = std::get<1>(d);
-        int n = 1;
-        while (true) {
-            std::cout << n << std::endl;
-            auto combos = combinations(n, buttons.size() - 1);
-            for (auto& combo : combos) {
-                std::vector<int> coeffs(buttons.size(), 0);
-                for (auto& pos : combo) {
-                    coeffs[pos] += 1;
-                }
-                if (vectors_equal(linear_combination(buttons, coeffs), target)) {
-                    break;
-                }
+    auto data = load_data("input.txt");
+    long tot = 0;
+    for (auto& row : data) {
+        auto target = std::get<0>(row);
+        auto buttons = std::get<1>(row);
+        std::deque<std::vector<int>> q {{},};
+        while (!q.empty()) {
+            // get a button press combo
+            auto combo = q.front();
+            q.pop_front();
+            // see if we have found one (which would then be the shortest)
+            if (vectors_equal(combine(buttons, combo), target)) {
+                tot += combo.size();
+                break;
             }
-            n++;
+            // otherwise, put new combos in the queue
+            for (int b = 0; b < buttons.size(); b++) {
+                auto copy = combo;
+                copy.push_back(b);
+                q.push_back(copy);
+            }
         }
     }
 
+    assert (tot == 452);
     return 0;
 }

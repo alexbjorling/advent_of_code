@@ -1,3 +1,7 @@
+/* This parsing is awful and there must be a better way to find nested
+ * regex with c++.
+ */
+
 #include <fstream>
 #include <regex>
 #include <stdexcept>
@@ -20,7 +24,7 @@ std::vector<Row> load_data(std::string fn) {
     // make a return container
     std::vector<Row> rows;
     // load the file line by line
-    std::ifstream ifs("ex.txt");
+    std::ifstream ifs(fn);
     if (ifs.fail()) {
         throw std::runtime_error("Failed to open input file");
     }
